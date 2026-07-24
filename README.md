@@ -57,24 +57,20 @@ The plugin registers five tools available to the AI agent:
 | Core (project) | `<directory-name>` (tagged `core`) | Sessions + survives compaction |
 | Core (global) | `global` (tagged `core`) | All projects + survives compaction |
 
-The project collection is auto-initialized when the plugin loads. The global collection is created on first use of `memory_store_global`.
+The project collection is auto-initialized when the plugin loads. The global collection is created on first use of `mnemosyne add -g` or the equivalent global store tool.
 
 ## AGENTS.md (recommended)
 
 For best results, add this to your project or global `AGENTS.md` so the agent uses memory proactively from the start of each session:
 
 ```markdown
-## Memory (mnemosyne)
+## Memory System
 
-- At the start of a session, use memory_recall and memory_recall_global to search for context
-  relevant to the user's first message.
-- After significant decisions, use memory_store to save a concise summary.
-- Delete contradicted memories with memory_delete before storing updated ones.
-- Use memory_recall_global / memory_store_global for cross-project preferences.
-- Mark critical, always-relevant context as core (core=true) — but use sparingly.
-- When you are done with a session, store any memories that you think are relevant
-  to the user and the project. This will help you recall important information in
-  future sessions.
+- Use `mnemosyne search -f plain [query]` and `mnemosyne search -g -f plain [query]` to search relevant memories. Use this before making any decisions or taking any actions.
+- After significant decisions, use `mnemosyne add "memory content"` to save a concise fact you want to remember. Also do this if the user explicitly asks you to remember something. Use `mnemosyne add -g "memory content"` for cross-project preferences.
+- Delete contradicted memories with `mnemosyne delete [memory id]` after storing updated ones with `mnemosyne add ...` or `mnemosyne add -g ...`.
+- Mark critical, always-relevant context as core with `-t core`, but use it sparingly. You can also use other tags with repeated `-t` flags, such as `mnemosyne add "database is sqlite" -t core -t tech-stack`.
+- When you are done with a session, store any memories that you think are relevant to the user and the project. This will help you recall important information in future sessions.
 ```
 
 ## How it works

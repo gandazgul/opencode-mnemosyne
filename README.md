@@ -1,105 +1,99 @@
-# opencode-mnemosyne
+# opencode-mnemoteca
 
-OpenCode plugin for **local persistent memory** using [Mnemosyne](https://github.com/gandazgul/mnemosyne). Gives your AI coding agent memory that persists across sessions -- entirely offline, no cloud APIs.
-
-This is the local/offline alternative to cloud-based memory plugins like opencode-supermemory.
+OpenCode plugin for **local persistent memory** using
+[Mnemoteca](https://github.com/gandazgul/mnemoteca). It gives your AI coding
+agent memory that persists across sessions. It is offline and does not use cloud
+APIs.
 
 ## Prerequisites
 
-Install the mnemosyne binary first:
+Install the `mnemoteca` binary first:
 
 ```bash
-# From source (requires Go 1.21+, GCC, Task)
-git clone https://github.com/gandazgul/mnemosyne.git
-cd mnemosyne
-task install
+curl -fsSL https://raw.githubusercontent.com/gandazgul/mnemoteca/main/install.sh | sh
+mnemoteca setup
 ```
 
-See the [mnemosyne README](https://github.com/gandazgul/mnemosyne#quick-start) for detailed setup instructions. On first use, mnemosyne will automatically download its ML models (~500 MB one-time).
+See the [Mnemoteca README](https://github.com/gandazgul/mnemoteca#installation)
+for detailed setup instructions. On first use, Mnemoteca downloads its ML models,
+approximately 500 MB one time.
 
-## Install
+Make sure the `mnemoteca` binary is in your `PATH`.
 
-Add to your `opencode.json`:
+## Installation
+
+Add the plugin to your OpenCode configuration:
 
 ```json
 {
-  "$schema": "https://opencode.ai/config.json",
-  "plugin": ["opencode-mnemosyne"]
+  "plugin": ["opencode-mnemoteca"]
 }
 ```
 
-That's it. OpenCode will install the plugin automatically.
+For local development, install from this repository checkout:
 
-## What it does
-
-### Tools
-
-The plugin registers five tools available to the AI agent:
-
-| Tool | Description |
-|------|-------------|
-| `memory_recall` | Search project memory for relevant context and past decisions |
-| `memory_recall_global` | Search global memory for cross-project preferences |
-| `memory_store` | Store a project-scoped memory (optionally as `core`) |
-| `memory_store_global` | Store a cross-project memory (optionally as `core`) |
-| `memory_delete` | Delete an outdated memory by its document ID |
-
-### Hooks
-
-- **`experimental.session.compacting`** -- Injects memory tool instructions into the compaction prompt so the agent retains awareness of its memory capabilities across context window resets.
-
-### Memory scoping
-
-| Scope | Collection | Persists across |
-|-------|-----------|-----------------|
-| Project | `<directory-name>` | Sessions in the same project |
-| Global | `global` | All projects |
-| Core (project) | `<directory-name>` (tagged `core`) | Sessions + survives compaction |
-| Core (global) | `global` (tagged `core`) | All projects + survives compaction |
-
-The project collection is auto-initialized when the plugin loads. The global collection is created on first use of `mnemosyne add -g` or the equivalent global store tool.
-
-## AGENTS.md (recommended)
-
-For best results, add this to your project or global `AGENTS.md` so the agent uses memory proactively from the start of each session:
-
-```markdown
-## Memory System
-
-- Use `mnemosyne search -f plain [query]` and `mnemosyne search -g -f plain [query]` to search relevant memories. Use this before making any decisions or taking any actions.
-- After significant decisions, use `mnemosyne add "memory content"` to save a concise fact you want to remember. Also do this if the user explicitly asks you to remember something. Use `mnemosyne add -g "memory content"` for cross-project preferences.
-- Delete contradicted memories with `mnemosyne delete [memory id]` after storing updated ones with `mnemosyne add ...` or `mnemosyne add -g ...`.
-- Mark critical, always-relevant context as core with `-t core`, but use it sparingly. You can also use other tags with repeated `-t` flags, such as `mnemosyne add "database is sqlite" -t core -t tech-stack`.
-- When you are done with a session, store any memories that you think are relevant to the user and the project. This will help you recall important information in future sessions.
+```bash
+npm install
+npm run build
 ```
+
+## Upgrade from opencode-mnemosyne
+
+If you already used the old OpenCode plugin, stop OpenCode before you change the
+configuration.
+
+1. Migrate CLI data first if needed. Use the
+   [Mnemoteca migration guide](https://github.com/gandazgul/mnemoteca/blob/main/docs/migrate-from-mnemosyne.md).
+2. Add `opencode-mnemoteca` to the same OpenCode configuration scope that used
+   `opencode-mnemosyne`.
+3. Restart OpenCode and verify that the memory tools work. Store and recall a
+   harmless test memory if needed.
+4. Remove `opencode-mnemosyne` from that same configuration scope.
+5. Restart OpenCode again.
+
+Do not load the old and new plugins together for normal use. The agent-facing
+`memory_*` tool names stay stable; only the plugin package and CLI command names
+change.
+
+Windows users must finish this replacement before restarting OpenCode. There is
+no Windows `mnemosyne` compatibility shim, alias, copied executable, or renamed
+executable.
+
+## Memory tools
+
+The agent-facing tool names stay stable. They describe memory capabilities, not
+product branding.
+
+| Tool | Purpose |
+| --- | --- |
+| `memory_recall` | Search project memory. |
+| `memory_recall_global` | Search global memory. |
+| `memory_store` | Store a project memory. Set `core=true` to tag it as core. |
+| `memory_store_global` | Store a global memory. Set `core=true` to tag it as core. |
+| `memory_delete` | Delete a memory by the numeric document ID shown in recall or list output. |
+
+Project memory uses a collection name derived from the project directory name.
+If that name is empty or `global`, the plugin uses `default`.
+
+The project collection is initialized when the plugin loads. The global
+collection is created on first use of `mnemoteca add -g` or the equivalent
+global store tool.
+
+## Commands taught to the agent
+
+- Use `mnemoteca search -f plain [query]` and `mnemoteca search -g -f plain [query]` to search relevant memories.
+- After significant decisions, use `mnemoteca add "memory content"` to save a concise fact. Use `mnemoteca add -g "memory content"` for cross-project preferences.
+- Delete contradicted memories with `mnemoteca delete [memory id]` after storing the updated memory.
+- Mark critical, always-relevant context as core with `-t core`. You can use repeated tags, such as `mnemoteca add "database is sqlite" -t core -t tech-stack`.
 
 ## How it works
 
-Mnemosyne is a local document store with hybrid search:
-- **Full-text search** (SQLite FTS5, BM25 ranking)
-- **Vector search** (sqlite-vec, cosine similarity with snowflake-arctic-embed-m-v1.5)
-- **Reciprocal Rank Fusion** combines both for best results
+Mnemoteca is a local document store with hybrid search:
 
-All ML inference runs locally via ONNX Runtime. Your memories never leave your machine.
+- SQLite storage on your machine.
+- BM25 plus vector search.
+- Local ONNX Runtime inference.
+- No cloud API calls.
 
-## Development
-
-This project uses standard Node.js tools: `npm` for package management and `tsc` (TypeScript compiler) for building.
-
-```bash
-# Install dependencies
-npm install
-
-# Build the project
-npm run build
-
-# Start the compiler in watch mode for development
-npm run dev
-
-# Run TypeScript checks
-npm run typecheck
-```
-
-## License
-
-MIT
+The plugin calls the `mnemoteca` executable with argument arrays. It does not
+own data storage, select databases, or run migrations.

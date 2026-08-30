@@ -1,7 +1,7 @@
 {
-  "name": "opencode-mnemosyne",
-  "version": "0.2.4",
-  "description": "OpenCode plugin for local persistent memory using Mnemosyne — offline semantic search, no cloud required",
+  "name": "opencode-mnemoteca",
+  "version": "0.3.0",
+  "description": "OpenCode plugin for local persistent memory using Mnemoteca — offline semantic search, no cloud required",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -9,12 +9,13 @@
     "build": "tsc",
     "dev": "tsc --watch",
     "typecheck": "tsc --noEmit",
-    "ci": "tsc --noEmit && tsc"
+    "ci": "tsc --noEmit && tsc",
+    "test": "tsc --noEmit -p tsconfig.test.json && tsx src/index.test.ts"
   },
   "keywords": [
     "opencode",
     "opencode-plugin",
-    "mnemosyne",
+    "mnemoteca",
     "memory",
     "local",
     "offline",
@@ -26,14 +27,15 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/gandazgul/opencode-mnemosyne.git"
+    "url": "git+https://github.com/gandazgul/opencode-mnemoteca.git"
   },
   "dependencies": {
     "@opencode-ai/plugin": "^1.2.24"
   },
   "devDependencies": {
     "@types/node": "^25.4.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "tsx": "^4.20.6"
   },
   "opencode": {
     "type": "plugin"
